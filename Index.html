@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>--Data-Visualization--</title>
+
+</head>
+
+<body>
+  <style>
+    html {
+      background-color: #252525;
+      display: grid;
+      place-items: center;
+      color: #ffffff;
+      font-size: large;
+      height: 100vh;
+    }
+
+    rect {
+      fill: #d9d9d9;
+    }
+  </style>
+    <div id="container"></div>
+</body>
+<script type="module">
+    import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
+
+    // Especificar las dimensiones y los márgenes del gráfico.
+    const width = 1100;
+    const height = 700;
+    const marginTop = 30;
+    const marginRight = 0;
+    const marginBottom = 30;
+    const marginLeft = 80;
+
+    d3.json(
+    "https://raw.githubusercontent.com/freeCodeCamp/ProjectReferenceData/master/GDP-data.json?authuser=0"
+    ).then((response) => {
+    const data = response.data;
+
+      // Ordenar los datos según la frecuencia en orden descendente.
+      data.sort((a, b) => b[1] - a[1]); 
+
+      // Declarar la escala x (posición horizontal).
+    const x = d3
+        .scaleBand()
+        .domain(data.map((d) => d[0])) 
+        .range([marginLeft, width - marginRight])
+        .padding(0.1);
+
+     // Declarar la escala y (posición vertical).
+    const y = d3
+        .scaleLinear()
+        .domain([0, d3.max(data, (d) => d[1])]) 
+        .range([height - marginBottom, marginTop]);
+
+      // Crea el contenedor SVG.
+    const svg = d3
+        .create("svg")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("viewBox", [0, 0, width, height])
+        .attr("style", "max-width: 100%; height: auto;");
+
+      // Añadir un rect para cada barra.
+    svg
+        .append("g")
+        .attr("fill", "red")
+        .selectAll()
+        .data(data)
+        .join("rect")
+        .attr("x", (d) => x(d[0])) 
+        .attr("y", (d) => y(d[1])) 
+        .attr("height", (d) => y(0) - y(d[1])) 
+        .attr("width", x.bandwidth());
+
+      // Agrega el eje x y la etiqueta.
+    svg
+        .append("g")
+        .attr("transform", `translate(0,${height - marginBottom})`)
+        .call(d3.axisBottom(x).tickSizeOuter(0));
+
+      // Agregue el eje y y la etiqueta, y elimine la línea de dominio.
+    svg
+        .append("g")
+        .attr("transform", `translate(${marginLeft},0)`)
+        .call(d3.axisLeft(y).tickFormat((y) => (y * 100).toFixed()))
+        .call((g) => g.select(".domain").remove())
+        .call((g) =>
+        g
+            .append("text")
+            .attr("x", -marginLeft)
+            .attr("y", 10)
+            .attr("fill", "currentColor")
+            .attr("text-anchor", "start")
+            .text("GPD Info")
+        );
+
+      // Adjuntar el SVG al elemento contenedor.
+    document.getElementById("container").appendChild(svg.node());
+    });
+</script>
+</html>
